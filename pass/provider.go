@@ -4,14 +4,21 @@ import (
 	"context"
 	"log"
 	"os"
+	"sync"
 
 	"github.com/blang/semver"
 	"github.com/gopasspw/gopass/pkg/action"
 	"github.com/gopasspw/gopass/pkg/config"
+	"github.com/gopasspw/gopass/pkg/store/root"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 	"github.com/pkg/errors"
 )
+
+type PassProvider struct {
+	store *root.Store
+	mutex *sync.Mutex
+}
 
 func Provider() terraform.ResourceProvider {
 	return &schema.Provider{
@@ -66,5 +73,10 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		}
 	}
 
-	return st, nil
+	pp := &PassProvider{
+		store: st,
+		mutex: &sync.Mutex{},
+	}
+
+	return pp, nil
 }
